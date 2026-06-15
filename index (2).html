@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bikaner Doctor Finder - बीकानेर डॉक्टर खोज</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --success: #16a34a;
+        }
+
+        body { font-family: system-ui, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; text-align: center; }
+        header { background-color: var(--primary); color: white; padding: 1.5rem 1rem; }
+        h1 { margin: 0; font-size: 1.8rem; }
+        h2 { margin: 5px 0 0 0; font-size: 1.2rem; font-weight: normal; }
+        .container { max-width: 600px; margin: 0 auto; padding: 2rem 1rem; }
+        .screen { display: none; }
+        .screen.active { display: block; }
+        
+        input, select { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1.1rem; box-sizing: border-box; }
+        .btn-primary { background-color: var(--primary); color: white; border: none; padding: 12px 24px; font-size: 1.2rem; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; }
+        .btn-primary:active { background-color: var(--primary-dark); }
+        .login-box { background: var(--card-bg); padding: 2rem; border-radius: 12px; border: 1px solid #e2e8f0; }
+        
+        .user-greeting { font-size: 1.3rem; color: var(--primary); font-weight: bold; margin-bottom: 1rem; }
+        .question-title { font-size: 1.3rem; margin-bottom: 2rem; font-weight: bold; }
+        .symptom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .symptom-card { background: var(--card-bg); border: 2px solid #e2e8f0; border-radius: 12px; padding: 1.5rem 1rem; cursor: pointer; }
+        .icon { font-size: 3rem; margin-bottom: 0.5rem; display: block; }
+        .hindi-text { font-size: 1.1rem; font-weight: bold; color: #000; }
+        .eng-text { font-size: 0.9rem; color: #64748b; margin-top: 4px; }
+        
+        .back-btn { background: #e2e8f0; border: none; padding: 10px; border-radius: 8px; font-size: 1rem; cursor: pointer; margin-bottom: 1.5rem; width: 100%; font-weight: bold; }
+        .doctor-card { background: var(--card-bg); border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; text-align: left; border-left: 5px solid var(--primary); }
+        .doc-name { font-size: 1.3rem; font-weight: bold; margin: 0 0 5px 0; }
+        .doc-spec { color: var(--primary); font-weight: bold; margin: 0 0 10px 0; }
+        .doc-hosp { color: #475569; margin: 0 0 15px 0; }
+        
+        .action-buttons { display: flex; gap: 10px; }
+        .map-btn, .book-btn { flex: 1; text-decoration: none; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 1rem; border: none; cursor: pointer; }
+        .map-btn { background-color: var(--success); color: white; }
+        .book-btn { background-color: var(--primary); color: white; }
+        
+        .success-message { background-color: #dcfce7; color: #166534; padding: 1rem; border-radius: 8px; border: 1px solid #bbf7d0; margin-bottom: 1rem; font-weight: bold; display: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Bikaner Doctor Finder</h1>
+        <h2>बीकानेर डॉक्टर खोज</h2>
+    </header>
+
+    <div class="container">
+        
+        <div id="login-screen" class="screen active">
+            <div class="login-box">
+                <h3 style="margin-top:0;">लॉगिन करें / Login</h3>
+                <input type="text" id="userName" placeholder="आपका नाम (Your Name)" required>
+                <input type="tel" id="userPhone" placeholder="मोबाइल नंबर (Mobile Number)" required>
+                <button class="btn-primary" onclick="loginUser()">लॉगिन (Enter)</button>
+            </div>
+        </div>
+
+        <div id="selection-screen" class="screen">
+            <div class="user-greeting" id="greetingMessage"></div>
+            <div class="success-message" id="successMsg">✅ अपॉइंटमेंट बुक हो गया! (Appointment Confirmed!)</div>
+            <div class="question-title">आपको क्या समस्या है?<br><span style="font-size: 1rem; color: #475569;">What is your problem?</span></div>
+
+            <div class="symptom-grid">
+                <div class="symptom-card" onclick="findDoctors('fever')"><span class="icon">🤒</span><div class="hindi-text">बुखार / सर्दी</div><div class="eng-text">Fever / Cold</div></div>
+                <div class="symptom-card" onclick="findDoctors('heart')"><span class="icon">❤️</span><div class="hindi-text">दिल / छाती दर्द</div><div class="eng-text">Heart / Chest Pain</div></div>
+                <div class="symptom-card" onclick="findDoctors('bone')"><span class="icon">🦴</span><div class="hindi-text">हड्डी / जोड़ दर्द</div><div class="eng-text">Bone / Joint Pain</div></div>
+                <div class="symptom-card" onclick="findDoctors('stomach')"><span class="icon">🤢</span><div class="hindi-text">पेट / लिवर</div><div class="eng-text">Stomach / Liver</div></div>
+                <div class="symptom-card" onclick="findDoctors('mind')"><span class="icon">🧠</span><div class="hindi-text">तनाव / घबराहट</div><div class="eng-text">Stress / Anxiety</div></div>
+                <div class="symptom-card" onclick="findDoctors('sugar')"><span class="icon">🩸</span><div class="hindi-text">शुगर / थायराइड</div><div class="eng-text">Sugar / Thyroid</div></div>
+            </div>
+        </div>
+
+        <div id="results-screen" class="screen">
+            <button class="back-btn" onclick="showScreen('selection-screen')">⬅ वापस जाएँ (Go Back)</button>
+            <div id="doctor-list"></div>
+        </div>
+
+        <div id="appointment-screen" class="screen">
+            <button class="back-btn" onclick="showScreen('results-screen')">⬅ वापस (Back)</button>
+            <div class="login-box">
+                <h3 style="color: var(--primary);" id="bookingDocName">Doctor Name</h3>
+                <p id="bookingHospitalName" style="color: #475569; margin-bottom: 20px;">Hospital Name</p>
+
+                <label style="display:block; text-align:left; font-weight:bold; margin-bottom:5px;">तारीख चुनें (Select Date):</label>
+                <input type="date" id="apptDate">
+
+                <label style="display:block; text-align:left; font-weight:bold; margin-bottom:5px;">समय चुनें (Select Time):</label>
+                <select id="apptTime">
+                    <option value="Morning">सुबह (Morning) - 10:00 AM to 1:00 PM</option>
+                    <option value="Evening">शाम (Evening) - 5:00 PM to 8:00 PM</option>
+                </select>
+
+                <button class="btn-primary" onclick="confirmAppointment()">पक्का करें (Confirm Booking)</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let currentUser = "";
+        let currentPhone = "";
+
+        const doctorsData = [
+            { type: 'fever', name: 'Dr. Ankit Swami', specialty: 'General Physician', hospital: 'Charak Health Care', query: 'Dr. Ankit Swami Charak Health Care Bikaner' },
+            { type: 'fever', name: 'Dr. Shailendra N Mathur', specialty: 'General Physician', hospital: 'Mathur Hospital', query: 'Mathur Hospital Rani Bazar Bikaner' },
+            { type: 'heart', name: 'Dr. Shravan Singh', specialty: 'Cardiology', hospital: 'Apex Hospitals', query: 'Apex Hospitals Bikaner' },
+            { type: 'heart', name: 'Dr. Surendra Poonia', specialty: 'Cardiology', hospital: 'Bikaner Heart Hospital', query: 'Bikaner Heart Hospital Bikaner' },
+            { type: 'bone', name: 'Dr. Rajendra Soni', specialty: 'Orthopedist', hospital: 'Darshan Ortho Care', query: 'Darshan Ortho Care Pawanpuri Bikaner' },
+            { type: 'stomach', name: 'Dr. Nishant Verma', specialty: 'Gastroenterologist', hospital: 'Sadul Colony', query: 'Dr. Nishant Verma Sadul Colony Bikaner' },
+            { type: 'mind', name: 'Dr. Anant Kumar Rathi', specialty: 'Psychiatrist', hospital: 'Sadul Colony', query: 'Dr. Anant Kumar Rathi Bikaner' },
+            { type: 'sugar', name: 'Dr. Laxmi Swamy', specialty: 'Diabetologist', hospital: 'Private Clinic', query: 'Dr. Laxmi Swamy Bikaner' }
+        ];
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function loginUser() {
+            const nameInput = document.getElementById('userName').value;
+            const phoneInput = document.getElementById('userPhone').value;
+
+            if (nameInput.trim() === "" || phoneInput.trim() === "") {
+                alert("कृपया अपना नाम और मोबाइल नंबर भरें।");
+                return;
+            }
+
+            currentUser = nameInput;
+            currentPhone = phoneInput;
+            document.getElementById('greetingMessage').innerText = `नमस्ते (Hello), ${currentUser}!`;
+            showScreen('selection-screen');
+        }
+
+        function findDoctors(symptomType) {
+            showScreen('results-screen');
+            const listContainer = document.getElementById('doctor-list');
+            listContainer.innerHTML = ''; 
+
+            const filteredDoctors = doctorsData.filter(doc => doc.type === symptomType);
+
+            filteredDoctors.forEach(doc => {
+                const mapUrl = `https://www.google.com/maps/search/?api=1&query=$${encodeURIComponent(doc.query)}`;
+                const docCard = `
+                    <div class="doctor-card">
+                        <p class="doc-name">${doc.name}</p>
+                        <p class="doc-spec">${doc.specialty}</p>
+                        <p class="doc-hosp">🏥 ${doc.hospital}</p>
+                        <div class="action-buttons">
+                            <button class="book-btn" onclick="openBooking('${doc.name}', '${doc.hospital}')">📅 अपॉइंटमेंट</button>
+                            <a href="${mapUrl}" class="map-btn" target="_blank">📍 मैप</a>
+                        </div>
+                    </div>
+                `;
+                listContainer.innerHTML += docCard;
+            });
+        }
+
+        function openBooking(docName, hospitalName) {
+            showScreen('appointment-screen');
+            document.getElementById('apptDate').valueAsDate = new Date();
+            document.getElementById('bookingDocName').innerText = docName;
+            document.getElementById('bookingHospitalName').innerText = hospitalName;
+        }
+
+        async function confirmAppointment() {
+            const date = document.getElementById('apptDate').value;
+            const time = document.getElementById('apptTime').value;
+            const docName = document.getElementById('bookingDocName').innerText;
+            const hospital = document.getElementById('bookingHospitalName').innerText;
+
+            if(!date) {
+                alert("कृपया तारीख चुनें। (Please select a date.)");
+                return;
+            }
+
+            const bookingData = {
+                patient_name: currentUser,    // Match the server.js column names
+                patient_phone: currentPhone,  // Match the server.js column names
+                doctor_name: docName,         // Match the server.js column names
+                date: date,
+                time: time
+            };
+
+            try {
+                // CLOUD READY: This relative path '/api/book' connects to Render perfectly.
+                const response = await fetch('/api/book', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(bookingData)
+                });
+
+                if (response.ok) {
+                    showScreen('selection-screen');
+                    const successMsg = document.getElementById('successMsg');
+                    successMsg.style.display = 'block';
+                    setTimeout(() => { successMsg.style.display = 'none'; }, 5000);
+                } else {
+                    const errorData = await response.json();
+                    alert("Error saving booking: " + (errorData.error || "Unknown error"));
+                }
+            } catch (error) {
+                alert("Server error! Ensure your Render web service is running.");
+            }
+        }
+    </script>
+</body>
+</html>

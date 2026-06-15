@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Dashboard - Live Roster</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f4f6f9;
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        h1 {
+            color: #2c3e50;
+            font-size: 24px;
+        }
+
+        .refresh-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eeeeee;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            color: #7f8c8d;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background-color: #fdfdfd;
+        }
+
+        .doctor-badge {
+            background-color: #e8f4fd;
+            color: #2980b9;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .action-btn {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .action-btn:hover {
+            background-color: #27ae60;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #95a5a6;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>📋 Live Appointment Dashboard</h1>
+        <button class="refresh-btn" onclick="fetchAppointments()">🔄 Refresh Roster</button>
+    </header>
+
+    <div class="table-container">
+        <table id="appointmentsTable">
+            <thead>
+                <tr>
+                    <th>Patient Name</th>
+                    <th>Phone Number</th>
+                    <th>Assigned Doctor</th>
+                    <th>Date</th>
+                    <th>Time Slot</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                </tbody>
+        </table>
+        <div id="noDataMessage" class="no-data" style="display: none;">
+            No appointments booked for today.
+        </div>
+    </div>
+</div>
+
+<script>
+    // Fetch and display active appointments from the database
+    async function fetchAppointments() {
+        const tableBody = document.getElementById('tableBody');
+        const noDataMessage = document.getElementById('noDataMessage');
+        
+        try {
+            const response = await fetch('/api/appointments');
+            const result = await response.json();
+            
+            tableBody.innerHTML = '';
+            
+            if (!result.data || result.data.length === 0) {
+                noDataMessage.style.display = 'block';
+                return;
+            }
+            
+            noDataMessage.style.display = 'none';
+            
+            result.data.forEach(appointment => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${escapeHtml(appointment.patient_name)}</strong></td>
+                    <td>${escapeHtml(appointment.patient_phone)}</td>
+                    <td><span class="doctor-badge">${escapeHtml(appointment.doctor_name)}</span></td>
+                    <td>${escapeHtml(appointment.date)}</td>
+                    <td>${escapeHtml(appointment.time)}</td>
+                    <td>
+                        <button class="action-btn" onclick="clearAppointment(${appointment.id})">✅ Done</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        } catch (error) {
+            console.error('Error loading appointments:', error);
+            alert('Failed to connect to the server database.');
+        }
+    }
+
+    // Delete an appointment entry when checked out
+    async function clearAppointment(id) {
+        if (!confirm("Mark this appointment as completed and clear it from the queue?")) return;
+        
+        try {
+            const response = await fetch(`/api/appointments/${id}`, {
+                method: 'DELETE'
+            });
+            
+            if (response.ok) {
+                fetchAppointments(); // Refresh panel table data instantly
+            } else {
+                alert("Failed to update database record.");
+            }
+        } catch (error) {
+            console.error('Error clearing entry:', error);
+            alert("Network connection error encountered.");
+        }
+    }
+
+    // Utility function to safeguard dashboard display against basic XSS scripts
+    function escapeHtml(str) {
+        return str.replace(/&/g, "&amp;")
+                  .replace(/</g, "&lt;")
+                  .replace(/>/g, "&gt;")
+                  .replace(/"/g, "&quot;")
+                  .replace(/'/g, "&#039;");
+    }
+
+    // Auto-load records when screen mounts
+    window.onload = fetchAppointments;
+</script>
+
+</body>
+</html>
